@@ -1,53 +1,45 @@
 import React, { useState } from 'react';
-import { fetchQuestions, PublicQuestion } from '../api';
 import Button from '../components/Button';
 import { useNavigate } from 'react-router-dom';
 
-export default function Start({ onStart }: { onStart: (qs: PublicQuestion[], email?: string) => void }) {
-  const [name, setName] = useState('');
+export default function AdminLogin({ onLogin }: { onLogin: (token: string) => void }) {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [darkMode, setDarkMode] = useState(true);
-  const [showScorePopup, setShowScorePopup] = useState(false);
-  const [scoreData, setScoreData] = useState<{score: number, total: number} | null>(null);
 
   const navigate = useNavigate();
 
-  async function start() {
-    if (!name || !email) {
-      setError('Name and Email are required');
+  async function handleLogin() {
+    if (!email || !password) {
+      setError('Email and Password required');
       return;
     }
     setLoading(true);
     setError(null);
+
     try {
-      const res = await fetch('http://localhost:4000/api/quiz/start', {
+      const res = await fetch('http://localhost:4000/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email }),
-      }).then((r) => r.json());
+        body: JSON.stringify({ email, password }),
+      });
 
-      if (res.alreadyTaken) {
-        setScoreData({
-          score: res.result.score,
-          total: res.result.total
-        });
-        setShowScorePopup(true);
-      } else {
-        const qs = await fetchQuestions();
-        onStart(qs, email);
+      if (!res.ok) {
+        const err = await res.json();
+        setError(err.error || 'Login failed');
+        setLoading(false);
+        return;
       }
+
+      const data = await res.json();
+      onLogin(data.token);
     } catch (e: any) {
-      setError(e.message || 'Failed to start quiz');
+      setError(e.message || 'Login failed');
     } finally {
       setLoading(false);
     }
-  }
-
-  function handleClosePopup() {
-    setShowScorePopup(false);
-    setScoreData(null);
   }
 
   return (
@@ -60,14 +52,13 @@ export default function Start({ onStart }: { onStart: (qs: PublicQuestion[], ema
             : 'bg-gradient-to-br from-teal-50 via-indigo-50 to-cyan-100 animate-gradient-light'
         }`}
       >
-        {/* Stronger diagonal lines effect */}
         <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
           <defs>
-            <pattern id="lightPattern" width="60" height="60" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-              <line x1="0" y="0" x2="0" y2="60" stroke="rgba(100,100,200,0.08)" strokeWidth="2" />
+            <pattern id="pattern-lines" width="60" height="60" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="60" stroke={darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(100,100,200,0.08)'} strokeWidth="2" />
             </pattern>
           </defs>
-          <rect width="100%" height="100%" fill="url(#lightPattern)" />
+          <rect width="100%" height="100%" fill="url(#pattern-lines)" />
         </svg>
       </div>
 
@@ -82,12 +73,12 @@ export default function Start({ onStart }: { onStart: (qs: PublicQuestion[], ema
           {darkMode ? '🌞 Light' : '🌙 Dark'}
         </button>
         <button
-          onClick={() => navigate('/admin/login')}
+          onClick={() => navigate('/')}
           className={`px-3 py-1 rounded-lg font-semibold border ${
             darkMode ? 'border-gray-400 text-gray-300 hover:bg-gray-700' : 'border-gray-600 text-gray-800 hover:bg-gray-200'
           } transition`}
         >
-          Admin
+          Quiz
         </button>
       </div>
 
@@ -100,20 +91,9 @@ export default function Start({ onStart }: { onStart: (qs: PublicQuestion[], ema
               : 'bg-white/60 border-gray-300 text-gray-900 backdrop-blur-md'
           } shadow-2xl rounded-3xl p-10 w-full max-w-md transform transition-all hover:scale-105 border`}
         >
-          <h1 className="text-3xl font-bold text-center mb-6">Welcome to the Quiz</h1>
+          <h1 className="text-3xl font-bold text-center mb-6">Admin Login</h1>
 
           <div className="flex flex-col gap-4">
-            <input
-              type="text"
-              placeholder="Full Name"
-              className={`w-full px-4 py-3 rounded-lg border ${
-                darkMode
-                  ? 'border-gray-600 bg-gray-700 text-gray-200 placeholder-gray-400'
-                  : 'border-gray-300 bg-white/80 text-gray-900 placeholder-gray-500 backdrop-blur-sm'
-              } focus:outline-none focus:ring-2 focus:ring-cyan-400 transition`}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
             <input
               type="email"
               placeholder="Email"
@@ -125,54 +105,32 @@ export default function Start({ onStart }: { onStart: (qs: PublicQuestion[], ema
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
+            <input
+              type="password"
+              placeholder="Password"
+              className={`w-full px-4 py-3 rounded-lg border ${
+                darkMode
+                  ? 'border-gray-600 bg-gray-700 text-gray-200 placeholder-gray-400'
+                  : 'border-gray-300 bg-white/80 text-gray-900 placeholder-gray-500 backdrop-blur-sm'
+              } focus:outline-none focus:ring-2 focus:ring-cyan-400 transition`}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </div>
 
           {error && <p className="text-red-500 mt-2 text-center">{error}</p>}
 
           <Button
-            onClick={start}
+            onClick={handleLogin}
             disabled={loading}
             className={`mt-6 w-full ${
               darkMode ? 'bg-cyan-600 hover:bg-cyan-500 text-white' : 'bg-cyan-400 hover:bg-cyan-300 text-gray-900'
             } font-semibold py-3 rounded-lg shadow-lg transition transform hover:-translate-y-1`}
           >
-            {loading ? 'Loading...' : 'Start Quiz'}
+            {loading ? 'Logging in...' : 'Login'}
           </Button>
         </div>
       </div>
-
-      {/* Score Popup */}
-      {showScorePopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
-          <div
-            className={`${
-              darkMode
-                ? 'bg-gray-800/90 border-gray-700 text-gray-200'
-                : 'bg-white/90 border-gray-300 text-gray-900 backdrop-blur-md'
-            } shadow-2xl rounded-3xl p-8 w-full max-w-md transform transition-all border`}
-          >
-            <h2 className="text-2xl font-bold text-center mb-4">Quiz Already Taken</h2>
-            <div className="text-center mb-6">
-              <p className="text-lg mb-2">You have already taken the quiz.</p>
-              <p className="text-xl font-semibold">
-                Score: {scoreData?.score} / {scoreData?.total}
-              </p>
-            </div>
-            <div className="flex justify-center">
-              <button
-                onClick={handleClosePopup}
-                className={`px-6 py-3 rounded-lg font-semibold shadow-lg transition transform hover:-translate-y-1 ${
-                  darkMode
-                    ? 'bg-cyan-600 hover:bg-cyan-500 text-white'
-                    : 'bg-cyan-400 hover:bg-cyan-300 text-gray-900'
-                }`}
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <style>{`
         @keyframes gradient-light {
