@@ -24,42 +24,49 @@ It allows users to take quizzes, stores their attempts, and provides an **Admin 
 
 ### User Interface
 
-| Light Mode | Dark Mode |
-|------------|-----------|
-| ![Quiz Login Light Mode](frontend/public/screenshots/LoginLight.png) | ![Quiz Login Dark Mode](frontend/public/screenshots/LoginDark.png) |
-| **Quiz Login** | **Quiz Login** |
+#### Quiz Login - Light Mode
+![Quiz Login Light Mode](frontend/public/screenshots/LoginLight.png)
 
-| Light Mode | Dark Mode |
-|------------|-----------|
-| ![Quiz Interface Light Mode](frontend/public/screenshots/QuizLight.png) | ![Quiz Interface Dark Mode](frontend/public/screenshots/QuizDark.png) |
-| **Quiz Interface** | **Quiz Interface** |
+#### Quiz Login - Dark Mode
+![Quiz Login Dark Mode](frontend/public/screenshots/LoginDark.png)
 
-| Light Mode | Dark Mode |
-|------------|-----------|
-| ![Result Light Mode](frontend/public/screenshots/ResultLight.png) | ![Result Dark Mode](frontend/public/screenshots/ResultDark.png) |
-| **Result Page** | **Result Page** |
+#### Quiz Interface - Light Mode
+![Quiz Interface Light Mode](frontend/public/screenshots/QuizLight.png)
+
+#### Quiz Interface - Dark Mode
+![Quiz Interface Dark Mode](frontend/public/screenshots/QuizDark.png)
+
+#### Result Page - Light Mode
+![Result Light Mode](frontend/public/screenshots/ResultLight.png)
+
+#### Result Page - Dark Mode
+![Result Dark Mode](frontend/public/screenshots/ResultDark.png)
 
 ### Admin Interface
 
-| Light Mode | Dark Mode |
-|------------|-----------|
-| ![Admin Login Light Mode](frontend/public/screenshots/AdminLoginLight.png) | ![Admin Login Dark Mode](frontend/public/screenshots/AdminLoginDark.png) |
-| **Admin Login** | **Admin Login** |
+#### Admin Login - Light Mode
+![Admin Login Light Mode](frontend/public/screenshots/AdminLoginLight.png)
 
-| Light Mode | Dark Mode |
-|------------|-----------|
-| ![Admin Dashboard Light Mode](frontend/public/screenshots/AdminDashboardLight.png) | ![Admin Dashboard Dark Mode](frontend/public/screenshots/AdminDashboardDark.png) |
-| **Admin Dashboard** | **Admin Dashboard** |
+#### Admin Login - Dark Mode
+![Admin Login Dark Mode](frontend/public/screenshots/AdminLoginDark.png)
 
-| Light Mode | Dark Mode |
-|------------|-----------|
-| ![User Summary Light Mode](frontend/public/screenshots/AdminUserSummaryLight.png) | ![User Summary Dark Mode](frontend/public/screenshots/AdminUserSummaryDark.png) |
-| **User Summary** | **User Summary** |
+#### Admin Dashboard - Light Mode
+![Admin Dashboard Light Mode](frontend/public/screenshots/AdminDashboardLight.png)
+
+#### Admin Dashboard - Dark Mode
+![Admin Dashboard Dark Mode](frontend/public/screenshots/AdminDashboardDark.png)
+
+#### User Summary - Light Mode
+![User Summary Light Mode](frontend/public/screenshots/AdminUserSummaryLight.png)
+
+#### User Summary - Dark Mode
+![User Summary Dark Mode](frontend/public/screenshots/AdminUserSummaryDark.png)
 
 ### Additional Features
 
+#### Attempt Prevention Popup
 ![Already Attempted Popup](frontend/public/screenshots/Notification.png)
-**Attempt Prevention Popup** - Shown when a user tries to take the quiz again
+*Shown when a user tries to take the quiz again*
 
 ---
 
