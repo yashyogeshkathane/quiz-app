@@ -26,6 +26,10 @@ export default function AdminDashboard({ token }: { token: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedAttempt, setSelectedAttempt] = useState<AttemptData | null>(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   useEffect(() => {
     async function fetchAttempts() {
@@ -65,9 +69,127 @@ export default function AdminDashboard({ token }: { token: string }) {
     fetchAttempts();
   }, [token]);
 
+  // Pagination calculations
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentAttempts = attempts.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(attempts.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+    // Scroll to top when changing pages
+    const cardElement = document.querySelector('.main-card');
+    if (cardElement) {
+      cardElement.scrollTop = 0;
+    }
+  };
+
   function handleLogout() {
     navigate('/admin/login');
   }
+
+  // Pagination component
+  const Pagination = () => {
+    const pageNumbers = [];
+    const maxVisiblePages = 5;
+    
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    // Adjust start page if we're near the end
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pageNumbers.push(i);
+    }
+
+    return (
+      <div className={`flex justify-center items-center space-x-2 mt-6 ${
+        darkMode ? 'text-gray-300' : 'text-gray-700'
+      }`}>
+        {/* First Page */}
+        <button
+          onClick={() => handlePageChange(1)}
+          disabled={currentPage === 1}
+          className={`px-3 py-1 rounded-lg font-semibold border ${
+            currentPage === 1
+              ? 'opacity-50 cursor-not-allowed'
+              : darkMode
+              ? 'border-gray-400 hover:bg-gray-700'
+              : 'border-gray-600 hover:bg-gray-200'
+          } transition`}
+        >
+          «
+        </button>
+
+        {/* Previous Page */}
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className={`px-3 py-1 rounded-lg font-semibold border ${
+            currentPage === 1
+              ? 'opacity-50 cursor-not-allowed'
+              : darkMode
+              ? 'border-gray-400 hover:bg-gray-700'
+              : 'border-gray-600 hover:bg-gray-200'
+          } transition`}
+        >
+          ‹
+        </button>
+
+        {/* Page Numbers */}
+        {pageNumbers.map(number => (
+          <button
+            key={number}
+            onClick={() => handlePageChange(number)}
+            className={`px-3 py-1 rounded-lg font-semibold border transition ${
+              currentPage === number
+                ? darkMode
+                  ? 'bg-cyan-600 border-cyan-600 text-white'
+                  : 'bg-cyan-400 border-cyan-400 text-gray-900'
+                : darkMode
+                ? 'border-gray-400 hover:bg-gray-700'
+                : 'border-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            {number}
+          </button>
+        ))}
+
+        {/* Next Page */}
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className={`px-3 py-1 rounded-lg font-semibold border ${
+            currentPage === totalPages
+              ? 'opacity-50 cursor-not-allowed'
+              : darkMode
+              ? 'border-gray-400 hover:bg-gray-700'
+              : 'border-gray-600 hover:bg-gray-200'
+          } transition`}
+        >
+          ›
+        </button>
+
+        {/* Last Page */}
+        <button
+          onClick={() => handlePageChange(totalPages)}
+          disabled={currentPage === totalPages}
+          className={`px-3 py-1 rounded-lg font-semibold border ${
+            currentPage === totalPages
+              ? 'opacity-50 cursor-not-allowed'
+              : darkMode
+              ? 'border-gray-400 hover:bg-gray-700'
+              : 'border-gray-600 hover:bg-gray-200'
+          } transition`}
+        >
+          »
+        </button>
+      </div>
+    );
+  };
 
   return (
     <div
@@ -101,11 +223,11 @@ export default function AdminDashboard({ token }: { token: string }) {
         </button>
       </div>
 
-      {/* Main Content */}
-      <div className="flex flex-col items-center w-full py-24 px-4">
-        {/* Card */}
+      {/* Main Content - Increased top padding to push card downward */}
+      <div className="flex flex-col items-center w-full py-20 px-4 mt-12">
+        {/* Scrollable Card */}
         <div
-          className={`w-full max-w-6xl p-10 ${
+          className={`main-card w-full max-w-6xl p-6 max-h-[75vh] overflow-y-auto ${
             darkMode
               ? 'bg-gray-800/70 border-gray-700 backdrop-blur-md'
               : 'bg-white/60 border-gray-300 backdrop-blur-md'
@@ -120,114 +242,126 @@ export default function AdminDashboard({ token }: { token: string }) {
 
           {selectedAttempt ? (
             // Detailed Attempt View - Scrollable
-            <div className="max-h-[70vh] overflow-y-auto pr-4">
-              <div className="space-y-6">
-                <button
-                  onClick={() => setSelectedAttempt(null)}
-                  className={`px-6 py-3 rounded-lg font-semibold shadow-lg transition transform hover:-translate-y-1 ${
-                    darkMode
-                      ? 'bg-cyan-600 hover:bg-cyan-500 text-white'
-                      : 'bg-cyan-400 hover:bg-cyan-300 text-gray-900'
-                  }`}
-                >
-                  ← Back to summary
-                </button>
+            <div className="space-y-6">
+              <button
+                onClick={() => setSelectedAttempt(null)}
+                className={`px-6 py-3 rounded-lg font-semibold shadow-lg transition transform hover:-translate-y-1 ${
+                  darkMode
+                    ? 'bg-cyan-600 hover:bg-cyan-500 text-white'
+                    : 'bg-cyan-400 hover:bg-cyan-300 text-gray-900'
+                }`}
+              >
+                ← Back to summary
+              </button>
 
-                <h2 className="text-2xl font-bold text-gray-600 mb-2">
-                  {selectedAttempt.userName} ({selectedAttempt.userEmail})
-                </h2>
-                <div className="mb-2 text-gray-500">
-                  Started: {new Date(selectedAttempt.startedAt).toLocaleString()} | Submitted:{' '}
-                  {new Date(selectedAttempt.submittedAt).toLocaleString()}
-                </div>
-                <div className="mb-6 font-semibold text-gray-600">
-                  Score: {selectedAttempt.score} / {selectedAttempt.total}
-                </div>
+              <h2 className="text-2xl font-bold text-gray-600 mb-2">
+                {selectedAttempt.userName} ({selectedAttempt.userEmail})
+              </h2>
+              <div className="mb-2 text-gray-500">
+                Started: {new Date(selectedAttempt.startedAt).toLocaleString()} | Submitted:{' '}
+                {new Date(selectedAttempt.submittedAt).toLocaleString()}
+              </div>
+              <div className="mb-6 font-semibold text-gray-600">
+                Score: {selectedAttempt.score} / {selectedAttempt.total}
+              </div>
 
-                <div className="space-y-4">
-                  {selectedAttempt.answers.map((ans, idx) => (
-                    <div
-                      key={idx}
-                      className={`p-6 rounded-2xl backdrop-blur-md border ${
-                        darkMode
-                          ? 'bg-gray-700/50 border-gray-600'
-                          : 'bg-white/50 border-gray-300'
-                      } shadow-md`}
-                    >
-                      <div className="font-semibold mb-4 text-gray-600">{idx + 1}. {ans.questionText}</div>
-                      <div className="space-y-3">
-                        {ans.options.map((opt, i) => {
-                          const isSelected = i === ans.selectedIndex;
-                          const isCorrect = i === ans.correctIndex;
-                          let bgClass = '';
-                          let borderClass = '';
-                          let textClass = 'text-gray-600';
+              <div className="space-y-4">
+                {selectedAttempt.answers.map((ans, idx) => (
+                  <div
+                    key={idx}
+                    className={`p-6 rounded-2xl backdrop-blur-md border ${
+                      darkMode
+                        ? 'bg-gray-700/50 border-gray-600'
+                        : 'bg-white/50 border-gray-300'
+                    } shadow-md`}
+                  >
+                    <div className="font-semibold mb-4 text-gray-600">{idx + 1}. {ans.questionText}</div>
+                    <div className="space-y-3">
+                      {ans.options.map((opt, i) => {
+                        const isSelected = i === ans.selectedIndex;
+                        const isCorrect = i === ans.correctIndex;
+                        let bgClass = '';
+                        let borderClass = '';
+                        let textClass = 'text-gray-600';
 
-                          if (isSelected && ans.correct) {
-                            bgClass = darkMode ? 'bg-green-900/50' : 'bg-green-100';
-                            borderClass = darkMode ? 'border border-green-600' : 'border border-green-400';
-                          } else if (isSelected && !ans.correct) {
-                            bgClass = darkMode ? 'bg-red-900/50' : 'bg-red-100';
-                            borderClass = darkMode ? 'border border-red-600' : 'border border-red-400';
-                          } else if (!isSelected && isCorrect) {
-                            borderClass = darkMode ? 'border-2 border-green-600' : 'border-2 border-green-400';
-                          }
+                        if (isSelected && ans.correct) {
+                          bgClass = darkMode ? 'bg-green-900/50' : 'bg-green-100';
+                          borderClass = darkMode ? 'border border-green-600' : 'border border-green-400';
+                        } else if (isSelected && !ans.correct) {
+                          bgClass = darkMode ? 'bg-red-900/50' : 'bg-red-100';
+                          borderClass = darkMode ? 'border border-red-600' : 'border border-red-400';
+                        } else if (!isSelected && isCorrect) {
+                          borderClass = darkMode ? 'border-2 border-green-600' : 'border-2 border-green-400';
+                        }
 
-                          return (
-                            <div
-                              key={i}
-                              className={`px-4 py-3 rounded-lg flex justify-between items-center ${bgClass} ${borderClass} ${textClass}`}
-                            >
-                              <span>{opt}</span>
-                              {isSelected && (
-                                <span className={`font-bold ${ans.correct ? 'text-green-600' : 'text-red-600'}`}>
-                                  {ans.correct ? '✔' : '✖'}
-                                </span>
-                              )}
-                              {!isSelected && isCorrect && <span className="text-green-600 font-bold">✔</span>}
-                            </div>
-                          );
-                        })}
-                      </div>
+                        return (
+                          <div
+                            key={i}
+                            className={`px-4 py-3 rounded-lg flex justify-between items-center ${bgClass} ${borderClass} ${textClass}`}
+                          >
+                            <span>{opt}</span>
+                            {isSelected && (
+                              <span className={`font-bold ${ans.correct ? 'text-green-600' : 'text-red-600'}`}>
+                                {ans.correct ? '✔' : '✖'}
+                              </span>
+                            )}
+                            {!isSelected && isCorrect && <span className="text-green-600 font-bold">✔</span>}
+                          </div>
+                        );
+                      })}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             </div>
           ) : (
-            // Summary Table
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className={`${darkMode ? 'bg-gray-700/50 text-gray-300' : 'bg-gray-200/50 text-gray-700'} backdrop-blur-md`}>
-                    <th className="border border-gray-500 px-6 py-4 text-left">Name</th>
-                    <th className="border border-gray-500 px-6 py-4 text-left">Email</th>
-                    <th className="border border-gray-500 px-6 py-4 text-left">Score</th>
-                    <th className="border border-gray-500 px-6 py-4 text-left">Started At</th>
-                    <th className="border border-gray-500 px-6 py-4 text-left">Submitted At</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {attempts.map((attempt, idx) => (
-                    <tr
-                      key={idx}
-                      className={`cursor-pointer transition ${
-                        darkMode 
-                          ? 'hover:bg-gray-700/30 text-gray-300' 
-                          : 'hover:bg-gray-100/50 text-gray-700'
-                      } backdrop-blur-sm`}
-                      onClick={() => setSelectedAttempt(attempt)}
-                    >
-                      <td className="border border-gray-500 px-6 py-4">{attempt.userName}</td>
-                      <td className="border border-gray-500 px-6 py-4">{attempt.userEmail}</td>
-                      <td className="border border-gray-500 px-6 py-4">{attempt.score} / {attempt.total}</td>
-                      <td className="border border-gray-500 px-6 py-4">{new Date(attempt.startedAt).toLocaleString()}</td>
-                      <td className="border border-gray-500 px-6 py-4">{new Date(attempt.submittedAt).toLocaleString()}</td>
+            // Summary Table with Pagination
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className={`${darkMode ? 'bg-gray-700/50 text-gray-300' : 'bg-gray-200/50 text-gray-700'} backdrop-blur-md sticky top-0`}>
+                      <th className="border border-gray-500 px-6 py-4 text-left">Name</th>
+                      <th className="border border-gray-500 px-6 py-4 text-left">Email</th>
+                      <th className="border border-gray-500 px-6 py-4 text-left">Score</th>
+                      <th className="border border-gray-500 px-6 py-4 text-left">Started At</th>
+                      <th className="border border-gray-500 px-6 py-4 text-left">Submitted At</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {currentAttempts.map((attempt, idx) => (
+                      <tr
+                        key={idx}
+                        className={`cursor-pointer transition ${
+                          darkMode 
+                            ? 'hover:bg-gray-700/30 text-gray-300' 
+                            : 'hover:bg-gray-100/50 text-gray-700'
+                        } backdrop-blur-sm`}
+                        onClick={() => setSelectedAttempt(attempt)}
+                      >
+                        <td className="border border-gray-500 px-6 py-4">{attempt.userName}</td>
+                        <td className="border border-gray-500 px-6 py-4">{attempt.userEmail}</td>
+                        <td className="border border-gray-500 px-6 py-4">{attempt.score} / {attempt.total}</td>
+                        <td className="border border-gray-500 px-6 py-4">{new Date(attempt.startedAt).toLocaleString()}</td>
+                        <td className="border border-gray-500 px-6 py-4">{new Date(attempt.submittedAt).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination Controls */}
+              {attempts.length > 0 && (
+                <div className="mt-4">
+                  <div className={`text-center mb-2 ${
+                    darkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
+                    Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, attempts.length)} of {attempts.length} attempts
+                  </div>
+                  <Pagination />
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -247,6 +381,25 @@ export default function AdminDashboard({ token }: { token: string }) {
           100% { background-position: 0% 50%; }
         }
         .animate-gradient-dark { background-size: 200% 200%; animation: gradient-dark 15s ease infinite; }
+
+        /* Custom scrollbar */
+        .main-card::-webkit-scrollbar {
+          width: 8px;
+        }
+        
+        .main-card::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+        }
+        
+        .main-card::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 4px;
+        }
+        
+        .main-card::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.5);
+        }
       `}</style>
     </div>
   );

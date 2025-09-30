@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from 'react';
-import Button from '../components/Button';
 import Timer from '../components/Timer';
 import QuestionCard from '../components/QuestionCard';
 import { PublicQuestion, submitAnswers } from '../api';
@@ -18,9 +17,10 @@ export default function QuizPage({
   const [darkMode, setDarkMode] = useState(true);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Map<number, number>>(new Map());
-  const [timeLeft, setTimeLeft] = useState<number>((questions?.length ?? 0) * 30);
-  const [timePerQuestion, setTimePerQuestion] = useState<Map<number, number>>(new Map());
-  const currentTimeRef = useRef<number>(0);
+
+  // 5 minutes = 300 seconds for entire quiz
+  const TOTAL_TIME = 300;
+  const [timeLeft, setTimeLeft] = useState<number>(TOTAL_TIME);
 
   // Guard if no questions
   if (!questions || questions.length === 0) {
@@ -40,20 +40,13 @@ export default function QuizPage({
           handleSubmit();
           return 0;
         }
-        currentTimeRef.current += 1;
-        setTimePerQuestion((prevMap) => {
-          const newMap = new Map(prevMap);
-          const prevTime = newMap.get(index) || 0;
-          newMap.set(index, prevTime + 1);
-          return newMap;
-        });
         return prev - 1;
       });
     }, 1000);
 
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index]);
+  }, []);
 
   function selectAnswer(qid: number, idx: number) {
     setAnswers((prev) => new Map(prev).set(qid, idx));
@@ -67,14 +60,19 @@ export default function QuizPage({
   }
 
   async function handleSubmit() {
-    const payload = questions.map((q, i) => ({
-      questionId: q.id,
-      selectedIndex: answers.get(q.id) ?? -1,
-      timeTakenSeconds: timePerQuestion.get(i) || 0,
-    }));
+    const timeTakenSeconds = TOTAL_TIME - timeLeft; // time spent until submit
+
+    const payload = {
+      email,
+      timeTakenSeconds,
+      answers: questions.map((q) => ({
+        questionId: q.id,
+        selectedIndex: answers.get(q.id) ?? -1,
+      })),
+    };
 
     try {
-      const res = await submitAnswers(email, payload);
+      const res = await submitAnswers(payload);
       onFinish(res);
     } catch (e: any) {
       alert('Submit failed: ' + e.message);
@@ -115,7 +113,7 @@ export default function QuizPage({
               : 'bg-white/60 border-gray-300 backdrop-blur-md'
           } shadow-2xl rounded-3xl text-gray-600`}
         >
-          <h1 className={`text-3xl font-bold mb-6 text-center text-gray-600`}>
+          <h1 className="text-3xl font-bold mb-6 text-center text-gray-600">
             Quiz
           </h1>
 
@@ -128,8 +126,8 @@ export default function QuizPage({
               onClick={goPrev}
               disabled={index === 0}
               className={`px-6 py-3 rounded-lg font-semibold shadow-lg transition transform hover:-translate-y-1 ${
-                darkMode 
-                  ? 'bg-cyan-600 hover:bg-cyan-500 text-white disabled:bg-gray-600 disabled:cursor-not-allowed' 
+                darkMode
+                  ? 'bg-cyan-600 hover:bg-cyan-500 text-white disabled:bg-gray-600 disabled:cursor-not-allowed'
                   : 'bg-cyan-400 hover:bg-cyan-300 text-gray-900 disabled:bg-gray-300 disabled:cursor-not-allowed'
               } ${index === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
@@ -139,8 +137,8 @@ export default function QuizPage({
               <button
                 onClick={goNext}
                 className={`px-6 py-3 rounded-lg font-semibold shadow-lg transition transform hover:-translate-y-1 ${
-                  darkMode 
-                    ? 'bg-cyan-600 hover:bg-cyan-500 text-white' 
+                  darkMode
+                    ? 'bg-cyan-600 hover:bg-cyan-500 text-white'
                     : 'bg-cyan-400 hover:bg-cyan-300 text-gray-900'
                 }`}
               >
@@ -150,8 +148,8 @@ export default function QuizPage({
               <button
                 onClick={handleSubmit}
                 className={`px-6 py-3 rounded-lg font-semibold shadow-lg transition transform hover:-translate-y-1 ${
-                  darkMode 
-                    ? 'bg-cyan-600 hover:bg-cyan-500 text-white' 
+                  darkMode
+                    ? 'bg-cyan-600 hover:bg-cyan-500 text-white'
                     : 'bg-cyan-400 hover:bg-cyan-300 text-gray-900'
                 }`}
               >

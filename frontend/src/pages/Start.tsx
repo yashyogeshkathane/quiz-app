@@ -10,7 +10,7 @@ export default function Start({ onStart }: { onStart: (qs: PublicQuestion[], ema
   const [error, setError] = useState<string | null>(null);
   const [darkMode, setDarkMode] = useState(true);
   const [showScorePopup, setShowScorePopup] = useState(false);
-  const [scoreData, setScoreData] = useState<{score: number, total: number} | null>(null);
+  const [scoreData, setScoreData] = useState<{score: number, total: number,created_at?: string} | null>(null);
 
   const navigate = useNavigate();
 
@@ -31,7 +31,8 @@ export default function Start({ onStart }: { onStart: (qs: PublicQuestion[], ema
       if (res.alreadyTaken) {
         setScoreData({
           score: res.result.score,
-          total: res.result.total
+          total: res.result.total,
+          created_at: res.result.created_at
         });
         setShowScorePopup(true);
       } else {
@@ -153,7 +154,7 @@ export default function Start({ onStart }: { onStart: (qs: PublicQuestion[], ema
           >
             <h2 className="text-2xl font-bold text-center mb-4">Quiz Already Taken</h2>
             <div className="text-center mb-6">
-              <p className="text-lg mb-2">You have already taken the quiz.</p>
+              <p className="text-lg mb-2">You have already taken the quiz.{scoreData?.created_at && (<> You took the test on {new Date(scoreData.created_at).toLocaleString()}</>)}</p>
               <p className="text-xl font-semibold">
                 Score: {scoreData?.score} / {scoreData?.total}
               </p>

@@ -9,12 +9,20 @@ export async function fetchQuestions(): Promise<PublicQuestion[]> {
   return res.json();
 }
 
-export async function submitAnswers(email: string, answers: Answer[]) {
-  const res = await fetch(`${API_BASE}/api/quiz/submit`, {
+export async function submitAnswers(payload: {
+  email: string;
+  timeTakenSeconds: number;
+  answers: { questionId: number; selectedIndex: number }[];
+}) {
+  const res = await fetch('http://localhost:4000/api/quiz/submit', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email,answers })
+    body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error('Submit failed');
+
+  if (!res.ok) {
+    throw new Error(`Submit failed: ${res.statusText}`);
+  }
   return res.json();
 }
+
