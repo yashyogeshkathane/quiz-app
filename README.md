@@ -202,12 +202,8 @@ It allows users to take quizzes, stores their attempts, and provides an **Admin 
 | `created_at`         | TIMESTAMP DEFAULT NOW() | When the admin was created |
 
 
-✅ This schema supports:
 
-* **Multiple users** taking the quiz.
-* **Multiple attempts per user** (via `attempts` + `answers`).
-* **Detailed tracking** of answers + time spent.
-* **Admins** who can log in and view results securely.
+This database schema is designed to efficiently manage a quiz system with multiple users, track their answers in detail, and allow admins to oversee the results securely. The `users` table stores all individuals who take the quiz, with each user having a unique `id` as the primary key and a unique `email` to ensure that no user can have multiple entries with the same email, thereby preventing duplicate accounts. It also maintains the latest `score`, `total` possible score, detailed per-question information in the details JSONB field, the total `time_taken_seconds` for the quiz, and a `created_at` timestamp indicating when the user was registered. The `questions` table contains all quiz questions, each with a unique `id`, the question `text`, a list of multiple choice `options`, and the `correct_index` indicating the correct answer. The `answers` table records every attempt by a user, linking each answer to the `user_id` and the `question_id` as foreign keys, storing the selected_index chosen by the user and whether it was `correct`. This ensures a clear one-to-many relationship between users and their answers, as well as between questions and the answers submitted. The `admins` table allows secure access for administrators, storing each admin's unique `id` and `email` along with a `password_hash` and creation timestamp. The foreign key relationships ensure data integrity: every answer is tied to a valid user and a valid question, so deletion of a user or question can cascade appropriately to maintain consistency. Overall, this schema is structured to provide accurate tracking of quiz attempts, prevent duplicate entries, and enable robust reporting and administrative oversight.
 
 ---
 
