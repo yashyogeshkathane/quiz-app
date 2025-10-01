@@ -33,7 +33,7 @@ It allows users to take quizzes, stores their results, and provides an **Admin D
 2. **Taking the Quiz**
 
    * User answers questions on the frontend.
-   * Each answer is tracked along with the **time spent per question**.
+   * The total time taken to complete the quiz will be tracked.
 
 3. **Submit Quiz**
 
@@ -44,7 +44,6 @@ It allows users to take quizzes, stores their results, and provides an **Admin D
      * Calculates **score**.
      * Stores results into:
 
-       * `attempts` table → overall quiz result.
        * `answers` table → per-question details (answer, correctness, time).
 
 4. **Admin Registration (Secure)**
@@ -54,7 +53,7 @@ It allows users to take quizzes, stores their results, and provides an **Admin D
 
      * `x-admin-secret` header with the **master key** (from environment variable `ADMIN_MASTER_KEY`).
      * `email` and `password`.
-   * ✅ Only requests with the **valid master key** can create new admins.
+   * ✅ Only requests with the **valid master key** can create new admins.This ensures that only trusted sources with the correct master key can create admin accounts, preventing attackers from creating rogue admins and safeguarding the platform’s sensitive administrative privileges.
 
 5. **Admin Login**
 
