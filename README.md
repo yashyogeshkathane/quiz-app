@@ -14,59 +14,9 @@ It allows users to take quizzes, stores their attempts, and provides an **Admin 
 
 * User quiz flow (start, answer, submit).
 * Prevents duplicate submissions per user.
-* Tracks detailed answers and time per question.
+* Tracks detailed answers, score and time per question.
 * Admin login with JWT authentication.
 * Admin dashboard to view all attempts & details.
-
----
-
-## 📸 Application Screenshots
-
-### User Interface
-
-#### Quiz Login - Light Mode
-![Quiz Login Light Mode](frontend/public/screenshots/LoginLight.png)
-
-#### Quiz Login - Dark Mode
-![Quiz Login Dark Mode](frontend/public/screenshots/LoginDark.png)
-
-#### Quiz Interface - Light Mode
-![Quiz Interface Light Mode](frontend/public/screenshots/QuizLight.png)
-
-#### Quiz Interface - Dark Mode
-![Quiz Interface Dark Mode](frontend/public/screenshots/QuizDark.png)
-
-#### Result Page - Light Mode
-![Result Light Mode](frontend/public/screenshots/ResultLight.png)
-
-#### Result Page - Dark Mode
-![Result Dark Mode](frontend/public/screenshots/ResultDark.png)
-
-### Admin Interface
-
-#### Admin Login - Light Mode
-![Admin Login Light Mode](frontend/public/screenshots/AdminLoginLight.png)
-
-#### Admin Login - Dark Mode
-![Admin Login Dark Mode](frontend/public/screenshots/AdminLoginDark.png)
-
-#### Admin Dashboard - Light Mode
-![Admin Dashboard Light Mode](frontend/public/screenshots/AdminDashboardLight.png)
-
-#### Admin Dashboard - Dark Mode
-![Admin Dashboard Dark Mode](frontend/public/screenshots/AdminDashboardDark.png)
-
-#### User Summary - Light Mode
-![User Summary Light Mode](frontend/public/screenshots/AdminUserSummaryLight.png)
-
-#### User Summary - Dark Mode
-![User Summary Dark Mode](frontend/public/screenshots/AdminUserSummaryDark.png)
-
-### Additional Features
-
-#### Attempt Prevention Popup
-![Already Attempted Popup](frontend/public/screenshots/Notification.png)
-*Shown when a user tries to take the quiz again*
 
 ---
 
@@ -122,6 +72,57 @@ It allows users to take quizzes, stores their attempts, and provides an **Admin 
      * Attempt metadata (`startedAt`, `submittedAt`)
      * Detailed answers per question.
 
+
+---
+
+## 📸 Application Screenshots
+
+### User Interface
+
+#### Quiz Login - Light Mode
+![Quiz Login Light Mode](frontend/public/screenshots/LoginLight.png)
+
+#### Quiz Login - Dark Mode
+![Quiz Login Dark Mode](frontend/public/screenshots/LoginDark.png)
+
+#### Quiz Interface - Light Mode
+![Quiz Interface Light Mode](frontend/public/screenshots/QuizLight.png)
+
+#### Quiz Interface - Dark Mode
+![Quiz Interface Dark Mode](frontend/public/screenshots/QuizDark.png)
+
+#### Result Page - Light Mode
+![Result Light Mode](frontend/public/screenshots/ResultLight.png)
+
+#### Result Page - Dark Mode
+![Result Dark Mode](frontend/public/screenshots/ResultDark.png)
+
+### Admin Interface
+
+#### Admin Login - Light Mode
+![Admin Login Light Mode](frontend/public/screenshots/AdminLoginLight.png)
+
+#### Admin Login - Dark Mode
+![Admin Login Dark Mode](frontend/public/screenshots/AdminLoginDark.png)
+
+#### Admin Dashboard - Light Mode
+![Admin Dashboard Light Mode](frontend/public/screenshots/AdminDashboardLight.png)
+
+#### Admin Dashboard - Dark Mode
+![Admin Dashboard Dark Mode](frontend/public/screenshots/AdminDashboardDark.png)
+
+#### User Summary - Light Mode
+![User Summary Light Mode](frontend/public/screenshots/AdminUserSummaryLight.png)
+
+#### User Summary - Dark Mode
+![User Summary Dark Mode](frontend/public/screenshots/AdminUserSummaryDark.png)
+
+### Additional Features
+
+#### Attempt Prevention Popup
+![Already Attempted Popup](frontend/public/screenshots/Notification.png)
+*Shown when a user tries to take the quiz again*
+
 ---
 
 ## 🖥️ Frontend
@@ -159,14 +160,16 @@ It allows users to take quizzes, stores their attempts, and provides an **Admin 
 
 ### 📌 Users Table (`users`)
 
-| Column    | Type        | Description                                |
-| --------- | ----------- | ------------------------------------------ |
-| `id`      | SERIAL PK   | Unique user ID                             |
-| `name`    | TEXT        | User's full name                           |
-| `email`   | TEXT UNIQUE | User's email (must be unique)              |
-| `score`   | INT         | Latest quiz score                          |
-| `total`   | INT         | Total possible score in latest quiz        |
-| `details` | JSONB       | Latest attempt details (per-question info) |
+| Column               | Type                    | Description                                |
+| -------------------- | ------------------------| ------------------------------------------ |
+| `id`                 | SERIAL PK               | Unique user ID                             |
+| `name`               | TEXT                    | User's full name                           |
+| `email`              | TEXT UNIQUE             | User's email (must be unique)              |
+| `score`              | INT                     | Latest quiz score                          |
+| `total`              | INT                     | Total possible score in latest quiz        |
+| `details`            | JSONB                   | Latest attempt details (per-question info) |
+| `time_taken_seconds` | INT                     | Time taken in seconds to complete quiz     |
+| `created_at`         | TIMESTAMP DEFAULT NOW() | When the user was created                  |
 
 ### 📌 Questions Table (`questions`)
 
@@ -177,35 +180,27 @@ It allows users to take quizzes, stores their attempts, and provides an **Admin 
 | `options`       | TEXT[]    | Multiple choice options |
 | `correct_index` | INT       | Index of correct option |
 
-### 📌 Attempts Table (`attempts`)
-
-| Column         | Type              | Description          |
-| -------------- | ----------------- | -------------------- |
-| `id`           | SERIAL PK         | Unique attempt ID    |
-| `user_id`      | INT FK → users.id | User who attempted   |
-| `score`        | INT               | Score obtained       |
-| `total`        | INT               | Total questions      |
-| `started_at`   | TIMESTAMP         | Quiz start time      |
-| `submitted_at` | TIMESTAMP         | Quiz submission time |
 
 ### 📌 Answers Table (`answers`)
 
 | Column               | Type                  | Description                 |
 | -------------------- | --------------------- | --------------------------- |
 | `id`                 | SERIAL PK             | Unique answer ID            |
-| `attempt_id`         | INT FK → attempts.id  | Related attempt             |
+| `user_id`            | INT FK → users.id     | Related user                |
 | `question_id`        | INT FK → questions.id | Question answered           |
 | `selected_index`     | INT                   | Option chosen by user       |
 | `correct`            | BOOLEAN               | Whether answer was correct  |
-| `time_taken_seconds` | INT                   | Time spent on this question |
+
 
 ### 📌 Admins Table (`admins`)
 
-| Column          | Type        | Description     |
-| --------------- | ----------- | --------------- |
-| `id`            | SERIAL PK   | Admin ID        |
-| `email`         | TEXT UNIQUE | Admin email     |
-| `password_hash` | TEXT        | Hashed password |
+| Column               | Type                    | Description                |
+| ---------------------| ------------------------| ---------------------------|
+| `id`                 | SERIAL PK               | Admin ID                   |
+| `email`              | TEXT UNIQUE             | Admin email                |
+| `password_hash`      | TEXT                    | Hashed password            |
+| `created_at`         | TIMESTAMP DEFAULT NOW() | When the admin was created |
+
 
 ✅ This schema supports:
 

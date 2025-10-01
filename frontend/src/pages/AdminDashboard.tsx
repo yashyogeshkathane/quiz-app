@@ -14,8 +14,8 @@ type AttemptData = {
   userEmail: string;
   score: number;
   total: number;
-  startedAt: string;
-  submittedAt: string;
+  timeTakenSeconds: number;
+  examGivenAt: string; // from created_at in backend
   answers: AnswerDetail[];
 };
 
@@ -26,7 +26,7 @@ export default function AdminDashboard({ token }: { token: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedAttempt, setSelectedAttempt] = useState<AttemptData | null>(null);
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -47,8 +47,8 @@ export default function AdminDashboard({ token }: { token: string }) {
           userEmail: a.userEmail,
           score: a.score,
           total: a.total,
-          startedAt: a.startedAt,
-          submittedAt: a.submittedAt,
+          timeTakenSeconds: a.timeTakenSeconds,
+          examGivenAt: a.submittedAt, // backend should alias created_at as examGivenAt
           answers: a.answers.map((ans: any) => ({
             questionText: ans.questionText || 'Question text missing',
             options: ans.options || [],
@@ -92,11 +92,10 @@ export default function AdminDashboard({ token }: { token: string }) {
   const Pagination = () => {
     const pageNumbers = [];
     const maxVisiblePages = 5;
-    
+
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-    
-    // Adjust start page if we're near the end
+
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
@@ -106,10 +105,11 @@ export default function AdminDashboard({ token }: { token: string }) {
     }
 
     return (
-      <div className={`flex justify-center items-center space-x-2 mt-6 ${
-        darkMode ? 'text-gray-300' : 'text-gray-700'
-      }`}>
-        {/* First Page */}
+      <div
+        className={`flex justify-center items-center space-x-2 mt-6 ${
+          darkMode ? 'text-gray-300' : 'text-gray-700'
+        }`}
+      >
         <button
           onClick={() => handlePageChange(1)}
           disabled={currentPage === 1}
@@ -124,7 +124,6 @@ export default function AdminDashboard({ token }: { token: string }) {
           «
         </button>
 
-        {/* Previous Page */}
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
@@ -139,8 +138,7 @@ export default function AdminDashboard({ token }: { token: string }) {
           ‹
         </button>
 
-        {/* Page Numbers */}
-        {pageNumbers.map(number => (
+        {pageNumbers.map((number) => (
           <button
             key={number}
             onClick={() => handlePageChange(number)}
@@ -158,7 +156,6 @@ export default function AdminDashboard({ token }: { token: string }) {
           </button>
         ))}
 
-        {/* Next Page */}
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
@@ -173,7 +170,6 @@ export default function AdminDashboard({ token }: { token: string }) {
           ›
         </button>
 
-        {/* Last Page */}
         <button
           onClick={() => handlePageChange(totalPages)}
           disabled={currentPage === totalPages}
@@ -223,9 +219,7 @@ export default function AdminDashboard({ token }: { token: string }) {
         </button>
       </div>
 
-      {/* Main Content - Increased top padding to push card downward */}
       <div className="flex flex-col items-center w-full py-20 px-4 mt-12">
-        {/* Scrollable Card */}
         <div
           className={`main-card w-full max-w-6xl p-6 max-h-[75vh] overflow-y-auto ${
             darkMode
@@ -233,7 +227,7 @@ export default function AdminDashboard({ token }: { token: string }) {
               : 'bg-white/60 border-gray-300 backdrop-blur-md'
           } shadow-2xl rounded-3xl text-gray-600`}
         >
-          <h1 className={`text-3xl font-bold mb-6 text-center text-gray-600`}>
+          <h1 className="text-3xl font-bold mb-6 text-center text-gray-600">
             Admin Dashboard
           </h1>
 
@@ -241,7 +235,6 @@ export default function AdminDashboard({ token }: { token: string }) {
           {error && <p className="text-center text-red-500">{error}</p>}
 
           {selectedAttempt ? (
-            // Detailed Attempt View - Scrollable
             <div className="space-y-6">
               <button
                 onClick={() => setSelectedAttempt(null)}
@@ -258,8 +251,8 @@ export default function AdminDashboard({ token }: { token: string }) {
                 {selectedAttempt.userName} ({selectedAttempt.userEmail})
               </h2>
               <div className="mb-2 text-gray-500">
-                Started: {new Date(selectedAttempt.startedAt).toLocaleString()} | Submitted:{' '}
-                {new Date(selectedAttempt.submittedAt).toLocaleString()}
+                Quiz Taken: {new Date(selectedAttempt.examGivenAt).toLocaleString()} | Time Taken:{' '}
+                {selectedAttempt.timeTakenSeconds} seconds
               </div>
               <div className="mb-6 font-semibold text-gray-600">
                 Score: {selectedAttempt.score} / {selectedAttempt.total}
@@ -275,7 +268,9 @@ export default function AdminDashboard({ token }: { token: string }) {
                         : 'bg-white/50 border-gray-300'
                     } shadow-md`}
                   >
-                    <div className="font-semibold mb-4 text-gray-600">{idx + 1}. {ans.questionText}</div>
+                    <div className="font-semibold mb-4 text-gray-600">
+                      {idx + 1}. {ans.questionText}
+                    </div>
                     <div className="space-y-3">
                       {ans.options.map((opt, i) => {
                         const isSelected = i === ans.selectedIndex;
@@ -286,12 +281,18 @@ export default function AdminDashboard({ token }: { token: string }) {
 
                         if (isSelected && ans.correct) {
                           bgClass = darkMode ? 'bg-green-900/50' : 'bg-green-100';
-                          borderClass = darkMode ? 'border border-green-600' : 'border border-green-400';
+                          borderClass = darkMode
+                            ? 'border border-green-600'
+                            : 'border border-green-400';
                         } else if (isSelected && !ans.correct) {
                           bgClass = darkMode ? 'bg-red-900/50' : 'bg-red-100';
-                          borderClass = darkMode ? 'border border-red-600' : 'border border-red-400';
+                          borderClass = darkMode
+                            ? 'border border-red-600'
+                            : 'border border-red-400';
                         } else if (!isSelected && isCorrect) {
-                          borderClass = darkMode ? 'border-2 border-green-600' : 'border-2 border-green-400';
+                          borderClass = darkMode
+                            ? 'border-2 border-green-600'
+                            : 'border-2 border-green-400';
                         }
 
                         return (
@@ -301,11 +302,17 @@ export default function AdminDashboard({ token }: { token: string }) {
                           >
                             <span>{opt}</span>
                             {isSelected && (
-                              <span className={`font-bold ${ans.correct ? 'text-green-600' : 'text-red-600'}`}>
+                              <span
+                                className={`font-bold ${
+                                  ans.correct ? 'text-green-600' : 'text-red-600'
+                                }`}
+                              >
                                 {ans.correct ? '✔' : '✖'}
                               </span>
                             )}
-                            {!isSelected && isCorrect && <span className="text-green-600 font-bold">✔</span>}
+                            {!isSelected && isCorrect && (
+                              <span className="text-green-600 font-bold">✔</span>
+                            )}
                           </div>
                         );
                       })}
@@ -315,17 +322,22 @@ export default function AdminDashboard({ token }: { token: string }) {
               </div>
             </div>
           ) : (
-            // Summary Table with Pagination
             <>
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className={`${darkMode ? 'bg-gray-700/50 text-gray-300' : 'bg-gray-200/50 text-gray-700'} backdrop-blur-md sticky top-0`}>
+                    <tr
+                      className={`${
+                        darkMode
+                          ? 'bg-gray-700/50 text-gray-300'
+                          : 'bg-gray-200/50 text-gray-700'
+                      } backdrop-blur-md sticky top-0`}
+                    >
                       <th className="border border-gray-500 px-6 py-4 text-left">Name</th>
                       <th className="border border-gray-500 px-6 py-4 text-left">Email</th>
                       <th className="border border-gray-500 px-6 py-4 text-left">Score</th>
-                      <th className="border border-gray-500 px-6 py-4 text-left">Started At</th>
-                      <th className="border border-gray-500 px-6 py-4 text-left">Submitted At</th>
+                      <th className="border border-gray-500 px-6 py-4 text-left">Exam Given</th>
+                      <th className="border border-gray-500 px-6 py-4 text-left">Time Taken (s)</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -333,30 +345,38 @@ export default function AdminDashboard({ token }: { token: string }) {
                       <tr
                         key={idx}
                         className={`cursor-pointer transition ${
-                          darkMode 
-                            ? 'hover:bg-gray-700/30 text-gray-300' 
+                          darkMode
+                            ? 'hover:bg-gray-700/30 text-gray-300'
                             : 'hover:bg-gray-100/50 text-gray-700'
                         } backdrop-blur-sm`}
                         onClick={() => setSelectedAttempt(attempt)}
                       >
                         <td className="border border-gray-500 px-6 py-4">{attempt.userName}</td>
                         <td className="border border-gray-500 px-6 py-4">{attempt.userEmail}</td>
-                        <td className="border border-gray-500 px-6 py-4">{attempt.score} / {attempt.total}</td>
-                        <td className="border border-gray-500 px-6 py-4">{new Date(attempt.startedAt).toLocaleString()}</td>
-                        <td className="border border-gray-500 px-6 py-4">{new Date(attempt.submittedAt).toLocaleString()}</td>
+                        <td className="border border-gray-500 px-6 py-4">
+                          {attempt.score} / {attempt.total}
+                        </td>
+                        <td className="border border-gray-500 px-6 py-4">
+                          {new Date(attempt.examGivenAt).toLocaleString()}
+                        </td>
+                        <td className="border border-gray-500 px-6 py-4">
+                          {attempt.timeTakenSeconds}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
 
-              {/* Pagination Controls */}
               {attempts.length > 0 && (
                 <div className="mt-4">
-                  <div className={`text-center mb-2 ${
-                    darkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}>
-                    Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, attempts.length)} of {attempts.length} attempts
+                  <div
+                    className={`text-center mb-2 ${
+                      darkMode ? 'text-gray-400' : 'text-gray-600'
+                    }`}
+                  >
+                    Showing {indexOfFirstItem + 1} to{' '}
+                    {Math.min(indexOfLastItem, attempts.length)} of {attempts.length} attempts
                   </div>
                   <Pagination />
                 </div>
@@ -366,7 +386,6 @@ export default function AdminDashboard({ token }: { token: string }) {
         </div>
       </div>
 
-      {/* Gradient animations */}
       <style>{`
         @keyframes gradient-light {
           0% { background-position: 0% 50%; }
@@ -382,21 +401,17 @@ export default function AdminDashboard({ token }: { token: string }) {
         }
         .animate-gradient-dark { background-size: 200% 200%; animation: gradient-dark 15s ease infinite; }
 
-        /* Custom scrollbar */
         .main-card::-webkit-scrollbar {
           width: 8px;
         }
-        
         .main-card::-webkit-scrollbar-track {
           background: rgba(255, 255, 255, 0.1);
           border-radius: 4px;
         }
-        
         .main-card::-webkit-scrollbar-thumb {
           background: rgba(255, 255, 255, 0.3);
           border-radius: 4px;
         }
-        
         .main-card::-webkit-scrollbar-thumb:hover {
           background: rgba(255, 255, 255, 0.5);
         }

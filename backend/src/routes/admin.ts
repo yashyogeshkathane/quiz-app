@@ -77,26 +77,52 @@ function authMiddleware(req: any, res: any, next: any) {
 //   res.json(result.rows);
 // });
 
+// router.get('/attempts', authMiddleware, async (req, res) => {
+//   const result = await pool.query(
+//     `SELECT a.id as attempt_id, u.name as "userName", u.email as "userEmail",
+//             a.score, a.total, a.started_at as "startedAt", a.submitted_at as "submittedAt",
+//             json_agg(json_build_object(
+//               'questionText', q.text,
+//               'options', q.options,   -- include options here
+//               'selectedIndex', ans.selected_index,
+//               'correctIndex', q.correct_index,
+//               'correct', ans.correct
+//             )) as answers
+//      FROM attempts a
+//      JOIN users u ON u.id = a.user_id
+//      JOIN answers ans ON ans.attempt_id = a.id
+//      JOIN questions q ON q.id = ans.question_id
+//      GROUP BY a.id, u.name, u.email`
+//   );
+
+//   res.json(result.rows);
+// });
+
 router.get('/attempts', authMiddleware, async (req, res) => {
   const result = await pool.query(
-    `SELECT a.id as attempt_id, u.name as "userName", u.email as "userEmail",
-            a.score, a.total, a.started_at as "startedAt", a.submitted_at as "submittedAt",
+    `SELECT u.id as user_id,
+            u.name as "userName",
+            u.email as "userEmail",
+            u.score,
+            u.total,
+            u.time_taken_seconds as "timeTakenSeconds",
+            u.created_at as "submittedAt",
             json_agg(json_build_object(
               'questionText', q.text,
-              'options', q.options,   -- include options here
+              'options', q.options,
               'selectedIndex', ans.selected_index,
               'correctIndex', q.correct_index,
               'correct', ans.correct
             )) as answers
-     FROM attempts a
-     JOIN users u ON u.id = a.user_id
-     JOIN answers ans ON ans.attempt_id = a.id
+     FROM users u
+     JOIN answers ans ON ans.user_id = u.id
      JOIN questions q ON q.id = ans.question_id
-     GROUP BY a.id, u.name, u.email`
+     GROUP BY u.id, u.name, u.email, u.score, u.total, u.time_taken_seconds, u.created_at`
   );
 
   res.json(result.rows);
 });
+
 
 
 export default router;
