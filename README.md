@@ -6,7 +6,7 @@ This project is a **full-stack Quiz Application** built with:
 * **Backend**: Node.js + Express
 * **Database**: PostgreSQL
 
-It allows users to take quizzes, stores their attempts, and provides an **Admin Dashboard** for monitoring results.
+It allows users to take quizzes, stores their results, and provides an **Admin Dashboard** for monitoring results.
 
 ---
 
