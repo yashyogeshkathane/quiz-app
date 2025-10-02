@@ -4,11 +4,15 @@ import { QuestionPublic, Answer } from '../types';
 import scoreSubmission from '../scoring';
 
 const router = express.Router();
-
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Start quiz: check email
 router.post('/start', async (req, res) => {
   const { name, email } = req.body;
   if (!name || !email) return res.status(400).json({ error: 'Name and email required' });
+
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: 'Email not in proper format' });
+  }
 
   // check if user exists
   const userRes = await pool.query('SELECT * FROM users WHERE email=$1', [email]);

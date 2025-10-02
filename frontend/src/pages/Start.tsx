@@ -19,6 +19,11 @@ export default function Start({ onStart }: { onStart: (qs: PublicQuestion[], ema
       setError('Name and Email are required');
       return;
     }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Enter a valid email');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
